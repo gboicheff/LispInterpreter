@@ -1,31 +1,6 @@
 # https://theory.stanford.edu/~amitp/yapps/yapps-doc/node2.html
 import re
-import enum
-
-class TokenType(enum.Enum):
-    STR = 1
-    ID = 2
-    NUM = 3
-    OPEN_PAREN = 4
-    CLOSE_PAREN = 5
-    OPEN_BRACKET = 6
-    CLOSE_BRACKET = 7
-
-class Token:
-    def __init__(self, type, literal, index):
-        self.type = type
-        self.literal = literal
-        self.index = index
-
-    def __str__(self):
-        return "type:[{}]  literal:[{}]  index:[{}]".format(
-            self.type, self.literal, self.index)
-
-    def __eq__(self, other):
-        if isinstance(other, self.__class__):
-            return self.type == other.type and self.literal == other.literal and self.index == other.index
-        else:
-            return False
+from lisp_token import TokenType, Token
 
 
 class Lexer:
@@ -97,7 +72,7 @@ class Lexer:
 
     def match(self, *reg_strs):
         for reg_str in reg_strs:
-            if not re.match(reg_str, self.code[self.index]):
+            if not self.peek(reg_str):
                 return False
             self.index+=1
         return True
@@ -110,7 +85,17 @@ class Lexer:
         substr = self.code[self.start_index:self.index]
         start_index = self.start_index
         self.start_index = self.index # reset the token start index
-        return Token(token_type, substr, start_index)
+
+        literal = None
+
+        if token_type == TokenType.NUM:
+            literal = int(substr)
+        elif token_type == TokenType.STR:
+            literal = substr[1:-1] # remove double quotes and both sides
+        else:
+            literal = substr
+
+        return Token(token_type, literal, start_index)
     
 
     
