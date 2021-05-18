@@ -17,33 +17,26 @@ class Parser:
         self.tokens = tokens
         self.index = 0
         self.Ast = None
-
-        return self.parse_list()
+        return self.parse_expr()
 
 
     # top level
-    def parse_list(self):
+    def parse_expr(self):
         if not self.match(TokenType.OPEN_PAREN):
             raise ParseException(self.index, "Missing opening paren")
 
-        exprs = []
-        while self.peek(TokenType.NUM) or self.peek(TokenType.STR) or self.peek(TokenType.ID) or self.peek(TokenType.OPEN_PAREN):
-            exprs.append(self.parse_expr())
+        args = []
+        #while self.peek(TokenType.NUM) or self.peek(TokenType.STR) or self.peek(TokenType.ID) or self.peek(TokenType.OPEN_PAREN):
+        while not self.peek(TokenType.CLOSE_PAREN):
+            if self.peek(TokenType.OPEN_PAREN):
+                args.append(self.parse_expr())
+            else:
+                args.append(self.parse_terminal())
 
         if not self.match(TokenType.CLOSE_PAREN):
             raise ParseException(self.index, "Missing closing paren")
         
-        return lisp_List(exprs)
-
-    
-    def parse_expr(self):
-        value = None
-        if self.peek(TokenType.OPEN_PAREN):
-            value = self.parse_list()
-        else:
-            value = self.parse_terminal()
-        return lisp_Expr(value)
-            
+        return lisp_Expr(args)            
 
     def parse_terminal(self):
         if self.peek(TokenType.NUM):
