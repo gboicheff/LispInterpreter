@@ -82,6 +82,9 @@ class Interpreter:
         self.ast = ast
         self.global_scope = Scope()
         self.current_scope = self.global_scope
+        self.stl_funcs = self.init_stl()
+
+        return self.eval(ast)
 
     def eval(self, ast):
         if isinstance(ast, lisp_Expr):
@@ -93,16 +96,19 @@ class Interpreter:
         if not self.is_ID(expr.args[0]):
             raise InterpretException(expr, "First term must be an ID")
         else:
-            func_name = expr.args[0] 
-            #evaluated_args = [self.eval(arg) for arg in expr.args]
+            func_name = expr.args[0].token.literal
             if func_name == "let":
-                self.eval_let(expr)
+                return self.eval_let(expr)
+            elif func_name == "do":
+                return self.eval_let(expr)
+            else:
+                return self.stl_funcs[func_name]((expr.args[1:]))
 
 
     def eval_terminal(self, terminal):
         return terminal.token.literal
     
-    def eval_let(self, let_ast, asterisk=False):
+    def eval_let(self, let_ast):
 
         if not len(let_ast.args) > 2:
             raise InterpretException(let_ast, "Too few args for let")
@@ -111,19 +117,51 @@ class Interpreter:
         if not len(var_init_exprs):
             raise InterpretException(let_ast, "No variables to define in let")
 
-        if not asterisk:
-            self.current_scope = Scope(self.current_scope)
 
+        var_init_dict = dict()
         for var_init_expr in var_init_exprs:
             if len(var_init_expr.args) == 2:
                 raise InterpretException(var_init_expr)
 
-            if not self.is_ID(var_init_expr[0]):
-                
+            if not self.is_ID(var_init_expr.args[0]):
+                raise InterpretException(var_init_expr) # requires ID
 
+            var_init_dict[var_init_expr.args[0].token.literal] = self.eval(var_init_expr.args[1])
+        
+        self.current_scope = Scope(self.current_scope)
+
+        for name in var_init_dict.keys():
+            self.current_scope.init_var(name, var_init_dict[name])
+
+
+        return_val = self.eval_args(let_ast.args[2:])
 
 
         self.current_scope = self.current_scope.parent_scope
+    
+        return return_val
+
+
+    def eval_do(self, do_ast):
+        if not len(do_ast.args) > 1:
+            raise InterpretException(do_ast, "Too few args for let")
+
+        self.current_scope = Scope(self.current_scope)
+
+        return_val = self.eval_args(do_ast.args[1:])
+
+        self.current_scope = self.current_scope.parent_scope
+
+        return return_val
+
+    
+    def eval_args(self, args):
+        for index,arg_ast in enumerate(args):
+            arg_return = self.eval(arg_ast)
+            if index == len(args)-1:
+                return arg_return
+            
+
 
     def is_ID(self, ast):
         not isinstance(ast, lisp_Terminal) or not isinstance(ast.token, TokenType.ID)
@@ -131,18 +169,19 @@ class Interpreter:
     # needs more functions
     def init_stl(self):
         stl = {
-            "+": lambda x,y: x+y,
-            "-": lambda x,y: x-y,
-            "*": lambda x,y: x*y,
-            "/": lambda x,y: x/y,
-            "^": lambda x,y: x**y,
-            "%": lambda x,y: x%y,
-            "exp": lambda x: math.exp(x),
-            "sin": lambda x: math.sin(x),
-            "cos": lambda x: math.cos(x),
-            "tan": lambda x: math.tan(x),
-            "floor": lambda x: math.floor(x),            
-            "ceil": lambda x: math.ceil(x),      
-            "round": lambda x: round(x), 
+            "+": lambda args: args[0]+args[1],
+            "-": lambda args: args[0]-args[1],
+            "*": lambda args: args[0]*args[1],
+            "/": lambda args: args[0]/args[1],
+            "write": lambda args: print(args[0]),
+            # "^": lambda x,y: x**y,
+            # "%": lambda x,y: x%y,
+            # "exp": lambda x: math.exp(x),
+            # "sin": lambda x: math.sin(x),
+            # "cos": lambda x: math.cos(x),
+            # "tan": lambda x: math.tan(x),
+            # "floor": lambda x: math.floor(x),            
+            # "ceil": lambda x: math.ceil(x),      
+            # "round": lambda x: round(x), 
         }
         return stl
