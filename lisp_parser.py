@@ -26,8 +26,7 @@ class Parser:
             raise ParseException(self.index, "Missing opening paren")
 
         args = []
-        #while self.peek(TokenType.NUM) or self.peek(TokenType.STR) or self.peek(TokenType.ID) or self.peek(TokenType.OPEN_PAREN):
-        while not self.peek(TokenType.CLOSE_PAREN):
+        while self.peek(TokenType.NUM) or self.peek(TokenType.STR) or self.peek(TokenType.ID) or self.peek(TokenType.OPEN_PAREN):
             if self.peek(TokenType.OPEN_PAREN):
                 args.append(self.parse_expr())
             else:
