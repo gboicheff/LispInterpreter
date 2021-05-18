@@ -1,6 +1,13 @@
 from lisp_token import TokenType, Token
 from lisp_ast import *
 
+
+class ParseException(Exception):
+    def __init__(self, index, message="Exception occured while parsing"):
+        self.index = index
+        self.message = message
+        super().__init__(self.message)
+
 class Parser:
 
     def __init__(self):
@@ -17,20 +24,17 @@ class Parser:
     # top level
     def parse_list(self):
         if not self.match(TokenType.OPEN_PAREN):
-            raise Exception("Missing opening paren")
+            raise ParseException(self.index, "Missing opening paren")
 
-        seq = self.parse_seq()
-
-        if not self.match(TokenType.CLOSE_PAREN):
-            raise Exception("Missing closing paren")
-        
-        return lisp_List(seq)
-
-    def parse_seq(self):
         exprs = []
         while self.peek(TokenType.NUM) or self.peek(TokenType.STR) or self.peek(TokenType.ID) or self.peek(TokenType.OPEN_PAREN):
             exprs.append(self.parse_expr())
-        return lisp_Seq(exprs)
+
+        if not self.match(TokenType.CLOSE_PAREN):
+            raise ParseException(self.index, "Missing closing paren")
+        
+        return lisp_List(exprs)
+
     
     def parse_expr(self):
         value = None
@@ -48,15 +52,15 @@ class Parser:
             self.match(TokenType.STR)
         elif self.peek(TokenType.ID):
             self.match(TokenType.ID)
-        else:
-            raise Exception("Invalid terminal at index {}".format(self.index))        
+        else:   
+            raise ParseException(self.index, "Invalid terminal")     
         return lisp_Terminal(self.tokens[self.index-1])
 
 
     def peek(self, *token_types):
         for offset, token_type in enumerate(token_types):
             if self.index+offset > len(self.tokens)-1:
-                raise Exception("Invalid peek index:{}".format(self.index+offset))
+                return False
             if not self.tokens[self.index+offset].type == token_type:
                 return False
         return True

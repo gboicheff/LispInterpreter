@@ -2,7 +2,12 @@
 import re
 from lisp_token import TokenType, Token
 
-
+class LexException(Exception):
+    def __init__(self, index, message="Exception occured while lexing"):
+        self.index = index
+        self.message = message
+        super().__init__(self.message)
+        
 class Lexer:
     def __init__(self):
         pass
@@ -32,7 +37,7 @@ class Lexer:
         elif self.peek("\s"):
             self.advance()
         else:
-            raise Exception("Invalid character at index {} : {}".format(self.index, self.code[self.index]))
+            raise LexException(self.index)
 
     def lex_ID(self):
         self.match("[-+*/!@%^&=.a-zA-Z0-9_]") # match the first
@@ -51,7 +56,7 @@ class Lexer:
         while self.peek("[^\"]"):
             self.match("[^\"]")
         if not self.match("\""):
-            raise Exception("String missing closing \" at index {}".format(self.index))
+            raise LexException(self.index, "String missing closing double quote")
         self.tokens.append(self.emit(TokenType.STR))
     
     def lex_OPEN_PAREN(self):
@@ -65,7 +70,7 @@ class Lexer:
     def peek(self, *reg_strs):
         for offset,reg_str in enumerate(reg_strs):
             if self.index+offset > len(self.code)-1:
-                raise Exception("Invalid peek index:{}".format(self.index+offset))
+                return False
             if not re.match(reg_str, self.code[self.index+offset]):
                 return False
         return True         

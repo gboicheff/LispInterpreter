@@ -17,26 +17,6 @@ class lisp_Expr:
     def __str__(self):
         return "(Expr " + str(self.value) + ")"
 
-class lisp_Seq:
-    def __init__(self, exprs):
-        self.exprs = exprs
-        # super().__init__()
-
-    def __eq__(self, other):
-        if isinstance(other, self.__class__):
-            return self.exprs == other.exprs
-        else:
-            return False
-
-    def __str__(self):
-        string = "(Seq "
-        for index, expr in enumerate(self.exprs):
-            if index == len(self.exprs) - 1:
-                string += str(expr)
-            else:
-                string += str(expr) + " "
-        return string + ")"
-
 class lisp_List:
     def __init__(self, seq):
         self.seq = seq
@@ -44,12 +24,23 @@ class lisp_List:
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):
-            return self.seq == other.seq
+            if len(self.seq) != len(other.seq):
+                return False
+            for index in range(len(self.seq)):
+                if self.seq[index] != other.seq[index]:
+                    return False
+            return True
         else:
             return False
 
     def __str__(self):
-        return "(List " + str(self.seq) + ")"
+        output_str = "(List "
+        for index, s in enumerate(self.seq):
+            if index == len(self.seq) - 1:
+                output_str += str(s)
+            else:
+                output_str += str(s) + " "
+        return output_str + ")"
 
 class lisp_Terminal:
     def __init__(self, token):
