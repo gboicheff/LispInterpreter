@@ -74,6 +74,13 @@ class InterpretException(Exception):
         self.message = message
         super().__init__(self.message)
 
+class STLFunc:
+    # num_args=-1 when the function can take an arbitrary number of arguments
+    def __init__(self, name, func, num_args=-1):
+        self.name = name
+        self.num_args = num_args
+        self.func = func
+
 class Interpreter:
     def __init__(self):
         pass
@@ -106,7 +113,12 @@ class Interpreter:
             elif func_name == "defvar":
                 return self.eval_def_var(expr)
             else:
-                return self.stl_funcs[func_name](tuple(self.eval(arg) for arg in expr.args[1:]))
+                if not func_name in self.stl_funcs:
+                    raise InterpretException(expr)
+                if self.stl_funcs[func_name].num_args != len(expr.args) - 1 and self.stl_funcs[func_name].num_args != -1:
+                    raise InterpretException(expr, "Incorrect number of arguments")
+
+                return self.stl_funcs[func_name].func(tuple(self.eval(arg) for arg in expr.args[1:]))
 
 
     def eval_terminal(self, terminal):
@@ -180,19 +192,14 @@ class Interpreter:
     # needs more functions
     def init_stl(self):
         stl = {
-            "+": lambda args: sum(args),
-            "-": lambda args: -args[0] if len(args) == 1 else args[0] - sum(args[1:]),
-            "*": lambda args: math.prod(args),
-            "/": lambda args: args[0]/args[1],
-            "write": lambda args: print(args[0]),
-            # "^": lambda x,y: x**y,
-            # "%": lambda x,y: x%y,
-            # "exp": lambda x: math.exp(x),
-            # "sin": lambda x: math.sin(x),
-            # "cos": lambda x: math.cos(x),
-            # "tan": lambda x: math.tan(x),
-            # "floor": lambda x: math.floor(x),            
-            # "ceil": lambda x: math.ceil(x),      
-            # "round": lambda x: round(x), 
+            "+": STLFunc("+", lambda args: sum(args)),
+            "-": STLFunc("-", lambda args: 0 if len(args) == 0 else -args[0] if len(args) == 1 else args[0] - sum(args[1:])),
+            "*": STLFunc("*", lambda args: math.prod(args)),
+            "/": STLFunc("/", lambda args: args[0]/args[1]),
+            "write": STLFunc("write", lambda args: print(args[0])),
+            "exp": STLFunc("exp", lambda args: math.exp(args[0]), 1),
+            "sin": STLFunc("sin", lambda args: math.sin(args[0]), 1),
+            "cos": STLFunc("cos", lambda args: math.cos(args[0]), 1),
+            "tan": STLFunc("tan", lambda args: math.tan(args[0]), 1), 
         }
         return stl

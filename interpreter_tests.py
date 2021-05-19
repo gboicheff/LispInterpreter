@@ -7,113 +7,67 @@ from unittest import TestCase
 from lisp_token import *
 
 class TestBasics(unittest.TestCase):
-    def test_1_positive(self):
-        lexer = Lexer()
-        parser = Parser()
-        interpreter = Interpreter()
-        test = "(+ 1)"
-        lexed_tokens = lexer.lex(test)
-        parsed_ast = parser.parse(lexed_tokens)
-        actual_output = interpreter.interpret(parsed_ast)
-        expected_output = 1
-        message = "positive test 1 failed"
-        self.assertEqual(actual_output, expected_output, message)
-
-    def test_2_positive(self):
-        lexer = Lexer()
-        parser = Parser()
-        interpreter = Interpreter()
+    def test_addition(self):
         test = "(+)"
-        lexed_tokens = lexer.lex(test)
-        parsed_ast = parser.parse(lexed_tokens)
-        actual_output = interpreter.interpret(parsed_ast)
+        actual_output = run_test(test)
         expected_output = 0
-        message = "positive test 2 failed"
-        self.assertEqual(actual_output, expected_output, message)
+        self.assertEqual(actual_output, expected_output)
 
-    def test_3_positive(self):
-        lexer = Lexer()
-        parser = Parser()
-        interpreter = Interpreter()
-        test = "(+ 1 2)"
-        lexed_tokens = lexer.lex(test)
-        parsed_ast = parser.parse(lexed_tokens)
-        actual_output = interpreter.interpret(parsed_ast)
-        expected_output = 3
-        message = "positive test 3 failed"
-        self.assertEqual(actual_output, expected_output, message)
-
-    def test_4_positive(self):
-        lexer = Lexer()
-        parser = Parser()
-        interpreter = Interpreter()
-        test = "(- 10 1 2 3 4)"
-        lexed_tokens = lexer.lex(test)
-        parsed_ast = parser.parse(lexed_tokens)
-        actual_output = interpreter.interpret(parsed_ast)
-        expected_output = 0
-        message = "positive test 4 failed"
-        self.assertEqual(actual_output, expected_output, message)
-    
-    def test_5_positive(self):
-        lexer = Lexer()
-        parser = Parser()
-        interpreter = Interpreter()
-        test = "(- 10)"
-        lexed_tokens = lexer.lex(test)
-        parsed_ast = parser.parse(lexed_tokens)
-        actual_output = interpreter.interpret(parsed_ast)
-        expected_output = -10
-        message = "positive test 5 failed"
-        self.assertEqual(actual_output, expected_output, message)
-
-    def test_6_positive(self):
-        lexer = Lexer()
-        parser = Parser()
-        interpreter = Interpreter()
-        test = "(* 10)"
-        lexed_tokens = lexer.lex(test)
-        parsed_ast = parser.parse(lexed_tokens)
-        actual_output = interpreter.interpret(parsed_ast)
-        expected_output = 10
-        message = "positive test 6 failed"
-        self.assertEqual(actual_output, expected_output, message)
-
-    def test_7_positive(self):
-        lexer = Lexer()
-        parser = Parser()
-        interpreter = Interpreter()
-        test = "(* 10 3)"
-        lexed_tokens = lexer.lex(test)
-        parsed_ast = parser.parse(lexed_tokens)
-        actual_output = interpreter.interpret(parsed_ast)
-        expected_output = 30
-        message = "positive test 7 failed"
-        self.assertEqual(actual_output, expected_output, message)
-
-    def test_8_positive(self):
-        lexer = Lexer()
-        parser = Parser()
-        interpreter = Interpreter()
-        test = "(* 10 3 4)"
-        lexed_tokens = lexer.lex(test)
-        parsed_ast = parser.parse(lexed_tokens)
-        actual_output = interpreter.interpret(parsed_ast)
-        expected_output = 120
-        message = "positive test 8 failed"
-        self.assertEqual(actual_output, expected_output, message)
-
-    def test_9_positive(self):
-        lexer = Lexer()
-        parser = Parser()
-        interpreter = Interpreter()
-        test = "(*)"
-        lexed_tokens = lexer.lex(test)
-        parsed_ast = parser.parse(lexed_tokens)
-        actual_output = interpreter.interpret(parsed_ast)
+        test = "(+ 1)"
+        actual_output = run_test(test)
         expected_output = 1
-        message = "positive test 9 failed"
-        self.assertEqual(actual_output, expected_output, message)
+        self.assertEqual(actual_output, expected_output)
+
+        test = "(+ 1 2)"
+        actual_output = run_test(test)
+        expected_output = 3
+        self.assertEqual(actual_output, expected_output)
+
+        test = "(+ 1 2 3 4)"
+        actual_output = run_test(test)
+        expected_output = 10
+        self.assertEqual(actual_output, expected_output)
+
+
+    def test_subtraction(self):
+        test = "(-)"
+        actual_output = run_test(test)
+        expected_output = 0
+        self.assertEqual(actual_output, expected_output)
+
+        test = "(- 1)"
+        actual_output = run_test(test)
+        expected_output = -1
+        self.assertEqual(actual_output, expected_output)
+
+        test = "(- 10 1 2 3 4)"
+        actual_output = run_test(test)
+        expected_output = 0
+        self.assertEqual(actual_output, expected_output)
+    
+
+    def test_multiplication(self):
+        test = "(*)"
+        actual_output = run_test(test)
+        expected_output = 1
+        self.assertEqual(actual_output, expected_output)
+
+        test = "(* 1)"
+        actual_output = run_test(test)
+        expected_output = 1
+        self.assertEqual(actual_output, expected_output)
+
+        test = "(* 1 2)"
+        actual_output = run_test(test)
+        expected_output = 2
+        self.assertEqual(actual_output, expected_output)
+
+        test = "(* 1 2 3)"
+        actual_output = run_test(test)
+        expected_output = 6
+        self.assertEqual(actual_output, expected_output)
+
+
 
 
     # def test_2_negative(self):
@@ -129,6 +83,14 @@ class TestBasics(unittest.TestCase):
     #     self.assertEqual(em.exception.message, "Missing opening paren")
 
 
+def run_test(input):
+    lexer = Lexer()
+    parser = Parser()
+    interpreter = Interpreter()
+    lexed_tokens = lexer.lex(input)
+    parsed_ast = parser.parse(lexed_tokens)
+    output = interpreter.interpret(parsed_ast)
+    return output
 
 
 
