@@ -1,1 +1,1 @@
-(do () (write 1) 2)
+(do (let ((x 2)) (write (+ x 2))) (write x))

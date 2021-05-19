@@ -103,12 +103,17 @@ class Interpreter:
                 return self.eval_let(expr)
             elif func_name == "do":
                 return self.eval_do(expr)
+            elif func_name == "defvar":
+                return self.eval_def_var(expr)
             else:
                 return self.stl_funcs[func_name](tuple(self.eval(arg) for arg in expr.args[1:]))
 
 
     def eval_terminal(self, terminal):
-        return terminal.token.literal
+        if terminal.token.type == TokenType.ID:
+            return self.current_scope.get_var(terminal.token.literal)
+        else:
+            return terminal.token.literal
     
     def eval_let(self, let_ast):
 
@@ -116,13 +121,13 @@ class Interpreter:
             raise InterpretException(let_ast, "Too few args for let")
 
         var_init_exprs = let_ast.args[1]
-        if not len(var_init_exprs):
+        if not len(var_init_exprs.args):
             raise InterpretException(let_ast, "No variables to define in let")
 
 
         var_init_dict = dict()
-        for var_init_expr in var_init_exprs:
-            if len(var_init_expr.args) == 2:
+        for var_init_expr in var_init_exprs.args:
+            if len(var_init_expr.args) != 2:
                 raise InterpretException(var_init_expr)
 
             if not self.is_ID(var_init_expr.args[0]):
@@ -143,6 +148,10 @@ class Interpreter:
     
         return return_val
 
+    def eval_def_var(self, def_var_ast):
+        if not len(def_var_ast.args) > 1:
+            raise InterpretException(def_var_ast, "Too few args for defvar")  
+        self.global_scope.init_var(self.eval(def_var_ast.args[1]))
 
     def eval_do(self, do_ast):
         if not len(do_ast.args) > 1:
@@ -171,9 +180,9 @@ class Interpreter:
     # needs more functions
     def init_stl(self):
         stl = {
-            "+": lambda args: args[0]+args[1],
-            "-": lambda args: args[0]-args[1],
-            "*": lambda args: args[0]*args[1],
+            "+": lambda args: sum(args),
+            "-": lambda args: -args[0] if len(args) == 1 else args[0] - sum(args[1:]),
+            "*": lambda args: math.prod(args),
             "/": lambda args: args[0]/args[1],
             "write": lambda args: print(args[0]),
             # "^": lambda x,y: x**y,
