@@ -93,6 +93,8 @@ class Interpreter:
             return self.eval_terminal(ast)
 
     def eval_expr(self, expr):
+        if len(expr.args) == 0:
+            return "NIL"
         if not self.is_ID(expr.args[0]):
             raise InterpretException(expr, "First term must be an ID")
         else:
@@ -100,9 +102,9 @@ class Interpreter:
             if func_name == "let":
                 return self.eval_let(expr)
             elif func_name == "do":
-                return self.eval_let(expr)
+                return self.eval_do(expr)
             else:
-                return self.stl_funcs[func_name]((expr.args[1:]))
+                return self.stl_funcs[func_name](tuple(self.eval(arg) for arg in expr.args[1:]))
 
 
     def eval_terminal(self, terminal):
@@ -164,7 +166,7 @@ class Interpreter:
 
 
     def is_ID(self, ast):
-        not isinstance(ast, lisp_Terminal) or not isinstance(ast.token, TokenType.ID)
+        return isinstance(ast, lisp_Terminal) and ast.token.type == TokenType.ID
 
     # needs more functions
     def init_stl(self):
