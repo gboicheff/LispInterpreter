@@ -133,6 +133,8 @@ class Interpreter:
                 return self.eval_set_q(expr)
             elif func_name == "dotimes":
                 return self.eval_do_times(expr)
+            elif func_name == "list":
+                return self.eval_list(expr)
             else:
                 if not func_name in self.stl_funcs:
                     raise InterpretException(expr)
@@ -234,7 +236,7 @@ class Interpreter:
         
         index_var_name = do_times_ast.args[1].args[0].token.literal
         index_var_max_val = self.eval(do_times_ast.args[1].args[1])
-        
+
         for index in range(index_var_max_val):
             if index == 0:
                 self.current_scope.init_var(index_var_name, index)
@@ -242,8 +244,18 @@ class Interpreter:
                 self.current_scope.update_var(index_var_name, index)
             self.eval_args(do_times_ast.args[2:])
         return False
-        
 
+    def eval_do_list(self, do_list_ast):
+        if not len(do_list_ast.args) > 2:
+            raise InterpretException(do_list_ast, "Too few args for dotimes")
+        
+        
+        
+    def eval_list(self, list_ast):
+        if len(list_ast.args) == 1:
+            return False
+        else:
+            return list(self.eval(arg) for arg in list_ast.args[1:])
 
 
     # needs more functions

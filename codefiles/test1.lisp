@@ -1,1 +1,1 @@
-(dotimes (i 5) (write i))
+(write (list 1 2 3))
