@@ -27,6 +27,14 @@ class TestBasics(unittest.TestCase):
         message = "positive test 3 failed"
         self.assertEqual(lexer.lex(test3), test3_expected_output, message)
 
+    def test_4_positive(self):
+        lexer = Lexer()
+        test1 = "(test 1.11)"
+        test1_expected_output = [Token(TokenType.OPEN_PAREN, "(", 0), Token(TokenType.ID, "test", 1), 
+        Token(TokenType.NUM, 1.11, 6), Token(TokenType.CLOSE_PAREN, ")", 10)]
+        message = "positive test 1 failed"
+        self.assertEqual(lexer.lex(test1), test1_expected_output, message)
+
     def test_1_negative(self):
         lexer = Lexer()
         test1 = "(test \"x)"

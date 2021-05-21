@@ -74,12 +74,24 @@ class InterpretException(Exception):
         self.message = message
         super().__init__(self.message)
 
+
+
 class STLFunc:
     # num_args=-1 when the function can take an arbitrary number of arguments
     def __init__(self, name, func, num_args=-1):
         self.name = name
-        self.num_args = num_args
+        self.num_args = num_args # -1 for any number of args, -2 for 1 or more args
         self.func = func
+    
+    def check_arg_count(self, other_count):
+        if self.num_args == -1:
+            return True
+        elif self.num_args == -2 and other_count > 0:
+            return True
+        elif self.num_args == other_count:
+            return True
+        else:
+            return False
 
 class Interpreter:
     def __init__(self):
@@ -90,6 +102,7 @@ class Interpreter:
         self.global_scope = Scope()
         self.current_scope = self.global_scope
         self.stl_funcs = self.init_stl()
+        self.global_scope.init_var("t", True) # set t to true
 
         return self.eval(ast)
 
@@ -100,8 +113,9 @@ class Interpreter:
             return self.eval_terminal(ast)
 
     def eval_expr(self, expr):
-        if len(expr.args) == 0:
-            return "NIL"
+        if len(expr.args) == 0: # handle NIL
+            return False
+
         if not self.is_ID(expr.args[0]):
             raise InterpretException(expr, "First term must be an ID")
         else:
@@ -115,7 +129,8 @@ class Interpreter:
             else:
                 if not func_name in self.stl_funcs:
                     raise InterpretException(expr)
-                if self.stl_funcs[func_name].num_args != len(expr.args) - 1 and self.stl_funcs[func_name].num_args != -1:
+                
+                if not self.stl_funcs[func_name].check_arg_count(len(expr.args) - 1):
                     raise InterpretException(expr, "Incorrect number of arguments")
 
                 return self.stl_funcs[func_name].func(tuple(self.eval(arg) for arg in expr.args[1:]))
@@ -189,17 +204,54 @@ class Interpreter:
     def is_ID(self, ast):
         return isinstance(ast, lisp_Terminal) and ast.token.type == TokenType.ID
 
+
+    def division(self, args):
+        if len(args) == 1:
+            return 1/args[0]
+        else:
+            x = args[0]
+            for y in args[1:]:
+                x /= y
+            return x
+
     # needs more functions
     def init_stl(self):
         stl = {
             "+": STLFunc("+", lambda args: sum(args)),
             "-": STLFunc("-", lambda args: 0 if len(args) == 0 else -args[0] if len(args) == 1 else args[0] - sum(args[1:])),
             "*": STLFunc("*", lambda args: math.prod(args)),
-            "/": STLFunc("/", lambda args: args[0]/args[1]),
+            "/": STLFunc("/", lambda args: division(args), -2),
             "write": STLFunc("write", lambda args: print(args[0])),
             "exp": STLFunc("exp", lambda args: math.exp(args[0]), 1),
             "sin": STLFunc("sin", lambda args: math.sin(args[0]), 1),
             "cos": STLFunc("cos", lambda args: math.cos(args[0]), 1),
             "tan": STLFunc("tan", lambda args: math.tan(args[0]), 1), 
+            "max": STLFunc("max", lambda args: max(args)), 
+            "min": STLFunc("min", lambda args: min(args)),
+            "=":  STLFunc("=", lambda args: equality(args),-2)
         }
         return stl
+
+def equality(args):
+    equal = True
+    arg0 = args[0]
+    for arg in args[1:]:
+        equal = equal and arg0 == arg
+    return equal
+def division(args):
+        if len(args) == 1:
+            return 1/args[0]
+        else:
+            x = args[0]
+            all_int = isinstance(x, int)
+            for y in args[1:]:
+                all_int = all_int and isinstance(y, int)
+
+            for y in args[1:]:
+                if y == 0:
+                    raise Exception("Division by zero") # change the error type to interpret?
+                if all_int:
+                    x //= y
+                else:
+                    x /= y
+            return x

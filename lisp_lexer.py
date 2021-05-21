@@ -49,6 +49,12 @@ class Lexer:
         self.match("[0-9]")
         while self.peek("[0-9]"):
             self.match("[0-9]")
+            
+        if self.peek("\."):
+            self.match("\.")
+
+        while self.peek("[0-9]"):
+            self.match("[0-9]")
         self.tokens.append(self.emit(TokenType.NUM))
     
     def lex_STR(self):
@@ -94,7 +100,10 @@ class Lexer:
         literal = None
 
         if token_type == TokenType.NUM:
-            literal = int(substr)
+            if "." in substr:
+                literal = float(substr)
+            else:
+                literal = int(substr)
         elif token_type == TokenType.STR:
             literal = substr[1:-1] # remove double quotes and both sides
         else:
