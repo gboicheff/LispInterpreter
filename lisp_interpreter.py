@@ -103,6 +103,7 @@ class Interpreter:
         self.current_scope = self.global_scope
         self.stl_funcs = self.init_stl()
         self.global_scope.init_var("t", True) # set t to true
+        self.global_scope.init_var("NIL", False) 
 
         return self.eval(ast)
 
@@ -128,6 +129,10 @@ class Interpreter:
                 return self.eval_def_var(expr)
             elif func_name == "while":
                 return self.eval_while(expr)
+            elif func_name == "setq":
+                return self.eval_set_q(expr)
+            elif func_name == "dotimes":
+                return self.eval_do_times(expr)
             else:
                 if not func_name in self.stl_funcs:
                     raise InterpretException(expr)
@@ -214,14 +219,32 @@ class Interpreter:
         return isinstance(ast, lisp_Terminal) and ast.token.type == TokenType.ID
 
 
-    def division(self, args):
-        if len(args) == 1:
-            return 1/args[0]
-        else:
-            x = args[0]
-            for y in args[1:]:
-                x /= y
-            return x
+    def eval_set_q(self, set_q_ast):
+        if not len(set_q_ast.args) > 2:
+            raise InterpretException(set_q_ast, "Too few args for setq")
+        self.current_scope.update_var(set_q_ast.args[1].token.literal, self.eval(set_q_ast.args[2]))
+        return False
+
+    def eval_do_times(self, do_times_ast):
+        if not len(do_times_ast.args) > 2:
+            raise InterpretException(do_times_ast, "Too few args for dotimes")
+        
+        if not len(do_times_ast.args[1].args) == 2:
+            raise InterpretException(do_times_ast, "exception in index var")
+        
+        index_var_name = do_times_ast.args[1].args[0].token.literal
+        index_var_max_val = self.eval(do_times_ast.args[1].args[1])
+        
+        for index in range(index_var_max_val):
+            if index == 0:
+                self.current_scope.init_var(index_var_name, index)
+            else:
+                self.current_scope.update_var(index_var_name, index)
+            self.eval_args(do_times_ast.args[2:])
+        return False
+        
+
+
 
     # needs more functions
     def init_stl(self):

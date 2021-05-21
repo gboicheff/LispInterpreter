@@ -200,6 +200,14 @@ class TestBasics(unittest.TestCase):
         expected_output = 1
         self.assertEqual(actual_output, expected_output)
 
+    
+    def test_while(self):
+        test = "(let ((x 1)) (while (< x 5) (setq x (+ x 1))) x)"
+        actual_output = run_test(test)
+        expected_output = 5
+        self.assertEqual(actual_output, expected_output)
+
+
 
 
 

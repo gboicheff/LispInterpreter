@@ -1,1 +1,1 @@
-(let ((x 1)) (while (< x 5) (write x)))
+(dotimes (i 5) (write i))
