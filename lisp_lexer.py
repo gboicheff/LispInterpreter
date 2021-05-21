@@ -30,7 +30,7 @@ class Lexer:
             self.lex_CLOSE_PAREN()
         elif self.peek("[0-9]"):
             self.lex_NUM()
-        elif self.peek("[-+*/!@%^&=.a-zA-Z0-9_]"):
+        elif self.peek("[-+*/!@%^&=.a-zA-Z0-9_<>]"):
             self.lex_ID()
         elif self.peek("\""):
             self.lex_STR()
@@ -40,9 +40,9 @@ class Lexer:
             raise LexException(self.index)
 
     def lex_ID(self):
-        self.match("[-+*/!@%^&=.a-zA-Z0-9_]") # match the first
-        while self.peek("[-+*/!@%^&=.a-zA-Z0-9_]"):
-            self.match("[-+*/!@%^&=.a-zA-Z0-9_]")
+        self.match("[-+*/!@%^&=.a-zA-Z0-9_<>]") # match the first
+        while self.peek("[-+*/!@%^&=.a-zA-Z0-9_<>]"):
+            self.match("[-+*/!@%^&=.a-zA-Z0-9_<>]")
         self.tokens.append(self.emit(TokenType.ID))
 
     def lex_NUM(self):

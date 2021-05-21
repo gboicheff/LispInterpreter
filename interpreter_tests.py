@@ -109,6 +109,98 @@ class TestBasics(unittest.TestCase):
         expected_output = True
         self.assertEqual(actual_output, expected_output)
 
+    def test_equality_eql(self):
+        test = "(eql 1)"
+        actual_output = run_test(test)
+        expected_output = True
+        self.assertEqual(actual_output, expected_output)
+
+        test = "(eql 1 2)"
+        actual_output = run_test(test)
+        expected_output = False
+        self.assertEqual(actual_output, expected_output)
+
+        test = "(eql 1 1 1 1 1)"
+        actual_output = run_test(test)
+        expected_output = True
+        self.assertEqual(actual_output, expected_output)
+
+        test = "(eql 1 1.0)"
+        actual_output = run_test(test)
+        expected_output = False
+        self.assertEqual(actual_output, expected_output)
+
+    def test_disequality(self):
+        test = "(/= 1)"
+        actual_output = run_test(test)
+        expected_output = True
+        self.assertEqual(actual_output, expected_output)
+
+        test = "(/= 1 2)"
+        actual_output = run_test(test)
+        expected_output = True
+        self.assertEqual(actual_output, expected_output)
+
+        test = "(/= 1 1 1 1 1)"
+        actual_output = run_test(test)
+        expected_output = False
+        self.assertEqual(actual_output, expected_output)
+
+    def test_less(self):
+        test = "(< 1)"
+        actual_output = run_test(test)
+        expected_output = True
+        self.assertEqual(actual_output, expected_output)
+
+        test = "(< 1 7)"
+        actual_output = run_test(test)
+        expected_output = True
+        self.assertEqual(actual_output, expected_output)
+
+        test = "(< 1 7 2)"
+        actual_output = run_test(test)
+        expected_output = False
+        self.assertEqual(actual_output, expected_output)
+
+    def test_greater(self):
+        test = "(> 1)"
+        actual_output = run_test(test)
+        expected_output = True
+        self.assertEqual(actual_output, expected_output)
+
+        test = "(> 1 7)"
+        actual_output = run_test(test)
+        expected_output = False
+        self.assertEqual(actual_output, expected_output)
+
+        test = "(> 7 3 2)"
+        actual_output = run_test(test)
+        expected_output = True
+        self.assertEqual(actual_output, expected_output)
+    
+    def test_max(self):
+        test = "(max 1)"
+        actual_output = run_test(test)
+        expected_output = 1
+        self.assertEqual(actual_output, expected_output)
+
+        test = "(max 1 7 2)"
+        actual_output = run_test(test)
+        expected_output = 7
+        self.assertEqual(actual_output, expected_output)
+
+    def test_min(self):
+        test = "(min 1)"
+        actual_output = run_test(test)
+        expected_output = 1
+        self.assertEqual(actual_output, expected_output)
+
+        test = "(min 1 7 2)"
+        actual_output = run_test(test)
+        expected_output = 1
+        self.assertEqual(actual_output, expected_output)
+
+
 
 
 

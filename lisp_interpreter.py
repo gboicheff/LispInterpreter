@@ -126,6 +126,8 @@ class Interpreter:
                 return self.eval_do(expr)
             elif func_name == "defvar":
                 return self.eval_def_var(expr)
+            elif func_name == "while":
+                return self.eval_while(expr)
             else:
                 if not func_name in self.stl_funcs:
                     raise InterpretException(expr)
@@ -192,7 +194,14 @@ class Interpreter:
 
         return return_val
 
-    
+    def eval_while(self, while_ast):
+        if not len(while_ast.args) > 1:
+            raise InterpretException(while_ast, "Too few args for while")
+        while self.eval(while_ast.args[1]):
+            self.eval_args(while_ast.args[2:])
+
+        return False # always returns NIL?
+
     def eval_args(self, args):
         for index,arg_ast in enumerate(args):
             arg_return = self.eval(arg_ast)
@@ -226,11 +235,52 @@ class Interpreter:
             "sin": STLFunc("sin", lambda args: math.sin(args[0]), 1),
             "cos": STLFunc("cos", lambda args: math.cos(args[0]), 1),
             "tan": STLFunc("tan", lambda args: math.tan(args[0]), 1), 
+            "abs": STLFunc("abs", lambda args: math.abs(args[0]), 1), 
             "max": STLFunc("max", lambda args: max(args)), 
             "min": STLFunc("min", lambda args: min(args)),
-            "=":  STLFunc("=", lambda args: equality(args),-2)
+            "=":  STLFunc("=", lambda args: equality(args),-2),
+            "eql":  STLFunc("eql", lambda args: equality_eql(args),-2),
+            "/=":  STLFunc("/=", lambda args: disequality(args),-2),
+            "<":  STLFunc("<", lambda args: less(args),-2),
+            "<=":  STLFunc("<=", lambda args: less_eq(args),-2),
+            ">":  STLFunc(">", lambda args: greater(args),-2),
+            ">=":  STLFunc(">=", lambda args: greater_eq(args),-2),
         }
         return stl
+
+def less(args):
+    less_b = True
+    last_arg = args[0]
+    for arg in args[1:]:
+        less_b = less_b and last_arg < arg
+        last_arg = arg
+    return less_b
+
+def less_eq(args):
+    less_b = True
+    last_arg = args[0]
+    for arg in args[1:]:
+        less_b = less_b and last_arg <= arg
+        last_arg = arg
+    return less_b
+
+def greater(args):
+    greater_b = True
+    last_arg = args[0]
+    for arg in args[1:]:
+        greater_b = greater_b and last_arg > arg
+        last_arg = arg
+    return greater_b
+
+def greater_eq(args):
+    greater_b = True
+    last_arg = args[0]
+    for arg in args[1:]:
+        greater_b = greater_b and last_arg >= arg
+        last_arg = arg
+    return greater_b
+
+
 
 def equality(args):
     equal = True
@@ -238,6 +288,21 @@ def equality(args):
     for arg in args[1:]:
         equal = equal and arg0 == arg
     return equal
+
+def equality_eql(args):
+    equal = True
+    arg0 = args[0]
+    for arg in args[1:]:
+        equal = equal and arg0 == arg and arg0 is arg
+    return equal
+
+def disequality(args):
+    equal = True
+    arg0 = args[0]
+    for arg in args[1:]:
+        equal = equal and arg0 != arg
+    return equal
+
 def division(args):
         if len(args) == 1:
             return 1/args[0]
