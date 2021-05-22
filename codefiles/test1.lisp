@@ -1,1 +1,1 @@
-(do (defvar x 10))
+(and t NIL)

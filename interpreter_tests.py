@@ -213,6 +213,60 @@ class TestBasics(unittest.TestCase):
         expected_output = 10
         self.assertEqual(actual_output, expected_output)
 
+    def test_if(self):
+        test = "(if t 0 1)"
+        actual_output = run_test(test)
+        expected_output = 0
+        self.assertEqual(actual_output, expected_output)
+
+        test = "(if NIL 0 1)"
+        actual_output = run_test(test)
+        expected_output = 1
+        self.assertEqual(actual_output, expected_output)
+
+    def test_and(self):
+        test = "(and)"
+        actual_output = run_test(test)
+        expected_output = True
+        self.assertEqual(actual_output, expected_output)
+
+        test = "(and t NIL)"
+        actual_output = run_test(test)
+        expected_output = False
+        self.assertEqual(actual_output, expected_output)
+
+        test = "(or t t)"
+        actual_output = run_test(test)
+        expected_output = True
+        self.assertEqual(actual_output, expected_output)
+
+    def test_or(self):
+        test = "(or)"
+        actual_output = run_test(test)
+        expected_output = False
+        self.assertEqual(actual_output, expected_output)
+
+        test = "(or t NIL)"
+        actual_output = run_test(test)
+        expected_output = True
+        self.assertEqual(actual_output, expected_output)
+
+        test = "(or NIL NIL)"
+        actual_output = run_test(test)
+        expected_output = False
+        self.assertEqual(actual_output, expected_output)
+
+    def test_not(self):
+        test = "(not t)"
+        actual_output = run_test(test)
+        expected_output = False
+        self.assertEqual(actual_output, expected_output)
+
+        test = "(not NIL)"
+        actual_output = run_test(test)
+        expected_output = True
+        self.assertEqual(actual_output, expected_output)
+
 
 
 

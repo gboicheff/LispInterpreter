@@ -129,6 +129,8 @@ class Interpreter:
                 return self.eval_list(expr)
             elif func_name == "defun":
                 return self.eval_de_fun(expr)
+            elif func_name == "if":
+                return self.eval_if(expr)
             else:
                 func = self.current_scope.get_func(func_name)
                 if not func.check_arg_count(len(expr.args) - 1):
@@ -282,6 +284,14 @@ class Interpreter:
 
 
 
+    def eval_if(self, if_ast):
+        if len(if_ast.args) != 4:
+            raise InterpretException(if_ast, "Too few args for if")
+        
+        if self.eval(if_ast.args[1]):
+            return self.eval(if_ast.args[2])
+        else:
+            return self.eval(if_ast.args[3])
         
 
         
@@ -315,6 +325,9 @@ class Interpreter:
             Func("<=", lambda args: less_eq(args), -2),
             Func(">", lambda args: greater(args), -2),
             Func(">=", lambda args: greater_eq(args), -2),
+            Func("and", lambda args: l_and(args)),
+            Func("or", lambda args: l_or(args)),
+            Func("not", lambda args: not args[0], 1),
         ]
         return stl
 
@@ -390,3 +403,21 @@ def division(args):
                 else:
                     x /= y
             return x
+
+def l_and(args):
+    result = True 
+    for arg in args:
+        if not isinstance(arg, bool):
+            raise Exception("All args must be boolean")
+        else:
+            result = result and arg
+    return result
+
+def l_or(args):
+    result = False
+    for arg in args:
+        if not isinstance(arg, bool):
+            raise Exception("All args must be boolean")
+        else:
+            result = result or arg
+    return result
