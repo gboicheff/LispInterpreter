@@ -207,6 +207,11 @@ class TestBasics(unittest.TestCase):
         expected_output = 5
         self.assertEqual(actual_output, expected_output)
 
+    def test_defun(self):
+        test = "(let ((x 5)) (defun test (z) (+ z 5)) (setq x (test x)) x)"
+        actual_output = run_test(test)
+        expected_output = 10
+        self.assertEqual(actual_output, expected_output)
 
 
 

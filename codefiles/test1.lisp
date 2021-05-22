@@ -1,1 +1,1 @@
-(write (list 1 2 3))
+(do (defvar x 10))

@@ -1,7 +1,7 @@
 from lisp_token import TokenType
 from lisp_ast import lisp_Expr, lisp_Terminal
 import math
-
+from functools import partial
 
 
 # https://www.cs.iusb.edu/~dvrajito/teach/c311/c311_elisp2.html
@@ -27,10 +27,7 @@ class Scope:
     def update_var(self, name, value):
         if not name in self.vars:
             if self.parent_scope != None:
-                if not name in self.parent_scope.vars:
-                    raise ScopeException(name, "Variable not defined in this scope")
-                else:
-                    self.parent_scope.update_var(name, value)
+                self.parent_scope.update_var(name, value)
             else:
                 raise ScopeException(name, "Variable not defined in this scope")
         else:
@@ -41,28 +38,22 @@ class Scope:
             return self.vars[name]
         else:
             if self.parent_scope != None:
-                if name in self.parent_scope.vars:
-                    return self.parent_scope.get_var(name)
-                else:
-                    raise ScopeException(name, "Variable not defined in this scope")
+                return self.parent_scope.get_var(name)
             else:
                 raise ScopeException(name, "Variable not defined in this scope")
 
-    def dec_func(self, name, ast):
-        if name in self.funcs:
-            raise ScopeException(name, "Function already defined in this scope")
+    def dec_func(self, func):
+        if func.name in self.funcs:
+            raise ScopeException(func.name, "Function already defined in this scope")
         else:
-            self.funcs[name] = ast
+            self.funcs[func.name] = func
         
     def get_func(self, name):
         if name in self.funcs:
             return self.funcs[name]
         else:
             if self.parent_scope != None:
-                if name in self.parent_scope.funcs:
                     return self.parent_scope.get_func(name)
-                else:
-                    raise ScopeException(name, "Function not defined in this scope")
             else:
                 raise ScopeException(name, "Function not defined in this scope")
 
@@ -74,9 +65,7 @@ class InterpretException(Exception):
         self.message = message
         super().__init__(self.message)
 
-
-
-class STLFunc:
+class Func:
     # num_args=-1 when the function can take an arbitrary number of arguments
     def __init__(self, name, func, num_args=-1):
         self.name = name
@@ -100,8 +89,11 @@ class Interpreter:
     def interpret(self, ast):
         self.ast = ast
         self.global_scope = Scope()
+        for func in self.init_stl():  # TODO this is kind of jank
+            self.global_scope.dec_func(func)
         self.current_scope = self.global_scope
-        self.stl_funcs = self.init_stl()
+
+
         self.global_scope.init_var("t", True) # set t to true
         self.global_scope.init_var("NIL", False) 
 
@@ -135,14 +127,14 @@ class Interpreter:
                 return self.eval_do_times(expr)
             elif func_name == "list":
                 return self.eval_list(expr)
+            elif func_name == "defun":
+                return self.eval_de_fun(expr)
             else:
-                if not func_name in self.stl_funcs:
-                    raise InterpretException(expr)
-                
-                if not self.stl_funcs[func_name].check_arg_count(len(expr.args) - 1):
+                func = self.current_scope.get_func(func_name)
+                if not func.check_arg_count(len(expr.args) - 1):
                     raise InterpretException(expr, "Incorrect number of arguments")
 
-                return self.stl_funcs[func_name].func(tuple(self.eval(arg) for arg in expr.args[1:]))
+                return func.func(tuple(self.eval(arg) for arg in expr.args[1:]))
 
 
     def eval_terminal(self, terminal):
@@ -220,6 +212,9 @@ class Interpreter:
     def is_ID(self, ast):
         return isinstance(ast, lisp_Terminal) and ast.token.type == TokenType.ID
 
+    def is_Expr(self, ast):
+        return isinstance(ast, lisp_Expr)
+
 
     def eval_set_q(self, set_q_ast):
         if not len(set_q_ast.args) > 2:
@@ -245,42 +240,82 @@ class Interpreter:
             self.eval_args(do_times_ast.args[2:])
         return False
 
-    def eval_do_list(self, do_list_ast):
-        if not len(do_list_ast.args) > 2:
-            raise InterpretException(do_list_ast, "Too few args for dotimes")
+
         
+    def eval_de_fun(self, defun_ast):
+        if not len(defun_ast.args) > 2:
+            raise InterpretException(defun_ast, "Too few args for defun")
+        if not self.is_ID(defun_ast.args[1]):
+            raise InterpretException(defun_ast, "Name of function must be an ID")
+        if not self.is_Expr(defun_ast.args[2]):
+            raise InterpretException(defun_ast, "Exception in args for defun")
+        for param in defun_ast.args[2].args:
+            if not isinstance(param, lisp_Terminal) and param.type == TokenType.ID:
+                raise InterpretException(defun_ast, "Parameters must be IDs")
         
+        func_name = defun_ast.args[1].token.literal
+        param_list = list(defun_ast.args[2].args)
+        func_ast = defun_ast.args[3]
+    
+
+        function_lambda = partial(self.execute_func, param_list, func_ast)
+        
+        self.current_scope.dec_func(Func(func_name, function_lambda, num_args=len(param_list)))
+
+        return False # TODO false should be NIL
+
+
+        
+
+    def execute_func(self, parameters, ast, args):
+        old_scope = self.current_scope
+        self.current_scope = Scope(self.current_scope)
+
+        for index, param in enumerate(parameters): # TODO handle mismatched argument amounts
+            self.current_scope.init_var(param.token.literal, args[index])
+        
+        return_val = self.eval(ast)
+
+        self.current_scope = old_scope
+
+        return return_val
+
+
+
+        
+
         
     def eval_list(self, list_ast):
         if len(list_ast.args) == 1:
             return False
         else:
             return list(self.eval(arg) for arg in list_ast.args[1:])
+        
 
 
     # needs more functions
     def init_stl(self):
-        stl = {
-            "+": STLFunc("+", lambda args: sum(args)),
-            "-": STLFunc("-", lambda args: 0 if len(args) == 0 else -args[0] if len(args) == 1 else args[0] - sum(args[1:])),
-            "*": STLFunc("*", lambda args: math.prod(args)),
-            "/": STLFunc("/", lambda args: division(args), -2),
-            "write": STLFunc("write", lambda args: print(args[0])),
-            "exp": STLFunc("exp", lambda args: math.exp(args[0]), 1),
-            "sin": STLFunc("sin", lambda args: math.sin(args[0]), 1),
-            "cos": STLFunc("cos", lambda args: math.cos(args[0]), 1),
-            "tan": STLFunc("tan", lambda args: math.tan(args[0]), 1), 
-            "abs": STLFunc("abs", lambda args: math.abs(args[0]), 1), 
-            "max": STLFunc("max", lambda args: max(args)), 
-            "min": STLFunc("min", lambda args: min(args)),
-            "=":  STLFunc("=", lambda args: equality(args),-2),
-            "eql":  STLFunc("eql", lambda args: equality_eql(args),-2),
-            "/=":  STLFunc("/=", lambda args: disequality(args),-2),
-            "<":  STLFunc("<", lambda args: less(args),-2),
-            "<=":  STLFunc("<=", lambda args: less_eq(args),-2),
-            ">":  STLFunc(">", lambda args: greater(args),-2),
-            ">=":  STLFunc(">=", lambda args: greater_eq(args),-2),
-        }
+        stl = [
+            Func("+", lambda args: sum(args)),
+            Func("-", lambda args: 0 if len(args) == 0 else -args[0] if len(args) == 1 else args[0] - sum(args[1:])),
+            Func("*", lambda args: math.prod(args)),
+            Func("/", lambda args: division(args), -2),
+            Func("write", lambda args: print(args[0])),
+            Func("exp", lambda args: math.exp(args[0]), 1),
+            Func("sin", lambda args: math.sin(args[0]), 1),
+            Func("cos", lambda args: math.cos(args[0]), 1),
+            Func("tan", lambda args: math.tan(args[0]), 1), 
+            Func("abs", lambda args: math.abs(args[0]), 1), 
+            Func("max", lambda args: max(args)), 
+            Func("min", lambda args: min(args)),
+            Func("=", lambda args: equality(args), -2),
+            Func("eql", lambda args: equality_eql(args), -2),
+            Func("/=", lambda args: disequality(args), -2),
+            Func("<", lambda args: less(args), -2),
+            Func("<=", lambda args: less_eq(args), -2),
+            Func(">", lambda args: greater(args), -2),
+            Func(">=", lambda args: greater_eq(args), -2),
+        ]
         return stl
 
 def less(args):
