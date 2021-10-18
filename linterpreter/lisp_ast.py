@@ -14,13 +14,9 @@ class lisp_Expr:
             return False
 
     def __str__(self):
-        output_str = "(Expr "
-        for index, s in enumerate(self.args):
-            if index == len(self.args) - 1:
-                output_str += str(s)
-            else:
-                output_str += str(s) + " "
-        return output_str + ")"
+        str_args = [str(arg) for arg in self.args]
+        output_str = "(Expr " + " ".join(str_args) + ")"
+        return output_str
 
 class lisp_Terminal:
     def __init__(self, token):
@@ -32,4 +28,4 @@ class lisp_Terminal:
         else:
             return False
     def __str__(self):
-        return "(Terminal " + str(self.token.type) + ")"
+        return "(Terminal " + str(self.token.type) + " " + str(self.token.literal) + ")"

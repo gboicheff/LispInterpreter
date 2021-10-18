@@ -1,10 +1,5 @@
-from lisp_interpreter import Interpreter
-from lisp_ast import lisp_Expr
+from linterpreter import *
 import unittest
-from lisp_lexer import *
-from lisp_parser import *
-from unittest import TestCase
-from lisp_token import *
 
 class TestBasics(unittest.TestCase):
     def test_addition(self):
@@ -206,11 +201,23 @@ class TestBasics(unittest.TestCase):
         actual_output = run_test(test)
         expected_output = 5
         self.assertEqual(actual_output, expected_output)
+    
+    def test_dotimes(self):
+        test = "(let ((value 0)) (dotimes (x 3) (setq value (+ x value))) value) "
+        actual_output = run_test(test)
+        expected_output = 3
+        self.assertEqual(actual_output, expected_output)
 
     def test_defun(self):
         test = "(let ((x 5)) (defun test (z) (+ z 5)) (setq x (test x)) x)"
         actual_output = run_test(test)
         expected_output = 10
+        self.assertEqual(actual_output, expected_output)
+
+    def test_defvar(self):
+        test = "(do (defvar x 1) (+ x 2))"
+        actual_output = run_test(test)
+        expected_output = 3
         self.assertEqual(actual_output, expected_output)
 
     def test_if(self):
@@ -268,25 +275,6 @@ class TestBasics(unittest.TestCase):
         self.assertEqual(actual_output, expected_output)
 
 
-
-
-
-
-
-
-    # def test_2_negative(self):
-    #     lexer = Lexer()
-    #     parser = Parser()
-    #     test2 = "test)"
-    #     message = "negative test 2 failed"
-
-    #     with self.assertRaises(ParseException, msg=message) as em:
-    #         lexed_tokens = lexer.lex(test2)
-    #         parsed_ast = parser.parse(lexed_tokens)
-    #     self.assertIsInstance(em.exception, ParseException)
-    #     self.assertEqual(em.exception.message, "Missing opening paren")
-
-
 def run_test(input):
     lexer = Lexer()
     parser = Parser()
@@ -297,7 +285,8 @@ def run_test(input):
     return output
 
 
-
+def interpreter_tests():
+    unittest.main()
 
 if __name__ == "__main__":
-    unittest.main()
+    interpreter_tests()

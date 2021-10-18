@@ -1,10 +1,8 @@
-from lisp_token import TokenType
-from lisp_ast import lisp_Expr, lisp_Terminal
+from .lisp_token import TokenType
+from .lisp_ast import lisp_Expr, lisp_Terminal
 import math
 from functools import partial
 
-
-# https://www.cs.iusb.edu/~dvrajito/teach/c311/c311_elisp2.html
 
 class ScopeException(Exception):
     def __init__(self, name, message="Scope exception"):
@@ -86,18 +84,21 @@ class Interpreter:
     def __init__(self):
         pass
 
-    def interpret(self, ast):
-        self.ast = ast
+
+    def setup(self):
         self.global_scope = Scope()
-        for func in self.init_stl():  # TODO this is kind of jank
+        for func in self.init_stl():
             self.global_scope.dec_func(func)
         self.current_scope = self.global_scope
 
-
         self.global_scope.init_var("t", True) # set t to true
-        self.global_scope.init_var("NIL", False) 
+        self.global_scope.init_var("NIL", False)
 
+    def interpret(self, ast):
+        self.setup()
+        self.ast = ast
         return self.eval(ast)
+
 
     def eval(self, ast):
         if isinstance(ast, lisp_Expr):
@@ -179,9 +180,11 @@ class Interpreter:
         return return_val
 
     def eval_def_var(self, def_var_ast):
-        if not len(def_var_ast.args) > 1:
-            raise InterpretException(def_var_ast, "Too few args for defvar")  
-        self.global_scope.init_var(self.eval(def_var_ast.args[1]))
+        if not len(def_var_ast.args) > 2:
+            raise InterpretException(def_var_ast, "Too few args for defvar")
+        if not def_var_ast.args[1].token.type == TokenType.ID:
+            raise InterpretException(def_var_ast, "Variable name must be an identifier")
+        self.global_scope.init_var(def_var_ast.args[1].token.literal, self.eval(def_var_ast.args[2]))
 
     def eval_do(self, do_ast):
         if not len(do_ast.args) > 1:

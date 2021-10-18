@@ -1,6 +1,5 @@
 import unittest
-from lisp_lexer import *
-from unittest import TestCase
+from linterpreter import *
 
 
 class TestBasics(unittest.TestCase):
@@ -46,6 +45,9 @@ class TestBasics(unittest.TestCase):
 
 
 
+def lexer_tests():
+    unittest.main()
+
 
 if __name__ == "__main__":
-    unittest.main()
+    lexer_tests()

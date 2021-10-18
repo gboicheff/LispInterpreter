@@ -1,9 +1,6 @@
-from lisp_ast import lisp_Expr
+from linterpreter import *
 import unittest
-from lisp_lexer import *
-from lisp_parser import *
-from unittest import TestCase
-from lisp_token import *
+
 
 class TestBasics(unittest.TestCase):
     def test_1_positive(self):
@@ -104,8 +101,8 @@ class TestBasics(unittest.TestCase):
 
 
 
-
-
+def parser_tests():
+    unittest.main()
 
 if __name__ == "__main__":
-    unittest.main()
+    parser_tests()

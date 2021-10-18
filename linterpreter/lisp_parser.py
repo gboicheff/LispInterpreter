@@ -1,5 +1,5 @@
-from lisp_token import TokenType, Token
-from lisp_ast import *
+from .lisp_token import TokenType
+from .lisp_ast import *
 
 
 class ParseException(Exception):

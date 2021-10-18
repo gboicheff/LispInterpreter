@@ -1,6 +1,5 @@
-# https://theory.stanford.edu/~amitp/yapps/yapps-doc/node2.html
 import re
-from lisp_token import TokenType, Token
+from .lisp_token import TokenType, Token
 
 class LexException(Exception):
     def __init__(self, index, message="Exception occured while lexing"):
