@@ -20,6 +20,8 @@ Run the following command:
 python run_repl.py
 ```
 
+Or check it out here https://replit.com/@gboicheff/LispInterpreter#.replit
+
 ### Run tests
 Run the following command:
 
