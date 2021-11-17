@@ -34,7 +34,7 @@ python run_tests.py
 * Loops (while, dotimes)
 * Variables and Scoping (defvar, setq, let)
 * Functions (defun)
-* Conditional (if)
+* Conditionals (if)
 * Lists (list)
 * Small standard library
 
